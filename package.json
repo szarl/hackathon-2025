@@ -8,16 +8,27 @@
     "start": "next start"
   },
   "dependencies": {
+    "@google/generative-ai": "^0.24.1",
+    "@microsoft/tiktokenizer": "^1.0.10",
+    "@qdrant/js-client-rest": "^1.15.1",
+    "googleapis": "^159.0.0",
+    "langfuse": "^3.38.5",
+    "langfuse-core": "^3.38.5",
+    "next": "15.5.3",
+    "openai": "^5.20.2",
+    "prettier": "^3.6.2",
+    "prettier-plugin-tailwindcss": "^0.6.14",
     "react": "19.1.0",
     "react-dom": "19.1.0",
-    "next": "15.5.3"
+    "uuid": "^13.0.0"
   },
   "devDependencies": {
-    "typescript": "^5",
+    "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
-    "@tailwindcss/postcss": "^4",
-    "tailwindcss": "^4"
+    "eslint": "^9.35.0",
+    "tailwindcss": "^4",
+    "typescript": "^5"
   }
 }
