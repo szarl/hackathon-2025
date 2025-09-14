@@ -19,13 +19,55 @@ export class GoogleSheetsService {
   private async initializeAuth() {
     try {
       let auth;
+      let tokens;
 
-      // Check if we have stored OAuth tokens
-      const tokenPath = path.join(process.cwd(), '.google-tokens.json');
+      // Check for individual environment variables first (production setup)
+      if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) {
+        console.log('Loading OAuth2 tokens from individual environment variables...');
 
-      if (await this.fileExists(tokenPath)) {
-        console.log('Loading stored OAuth2 tokens for Sheets...');
-        const tokens = JSON.parse(await fs.readFile(tokenPath, 'utf8'));
+        // Try to load from local .google-tokens.json for development
+        const tokenPath = path.join(process.cwd(), '.google-tokens.json');
+        if (await this.fileExists(tokenPath)) {
+          console.log('Loading tokens from local file...');
+          tokens = JSON.parse(await fs.readFile(tokenPath, 'utf8'));
+        } else {
+          // For production, we'll try to work without tokens or use service account
+          console.log('No local token file found, attempting to use OAuth2 flow...');
+          throw new Error('OAuth2 tokens not available. Please authenticate locally first or use service account.');
+        }
+
+        const oauth2Client = new google.auth.OAuth2(
+          process.env.GOOGLE_CLIENT_ID,
+          process.env.GOOGLE_CLIENT_SECRET,
+          'http://localhost/',
+        );
+
+        if (tokens) {
+          oauth2Client.setCredentials(tokens);
+
+          // Check if token needs refresh
+          if (tokens.expiry_date && tokens.expiry_date < Date.now()) {
+            console.log('Refreshing expired token...');
+            try {
+              const { credentials } = await oauth2Client.refreshAccessToken();
+              oauth2Client.setCredentials(credentials);
+
+              // Try to save refreshed tokens (only works locally)
+              if (await this.fileExists(tokenPath)) {
+                await fs.writeFile(tokenPath, JSON.stringify(credentials));
+              }
+            } catch (refreshError) {
+              console.error('Failed to refresh token:', refreshError);
+              // Continue with existing token and hope it works
+            }
+          }
+        }
+
+        auth = oauth2Client;
+      } else if (process.env.GOOGLE_OAUTH_TOKENS) {
+        // Fallback to JSON format for backward compatibility
+        console.log('Loading OAuth2 tokens from JSON environment variable...');
+        tokens = JSON.parse(process.env.GOOGLE_OAUTH_TOKENS);
 
         const oauth2Client = new google.auth.OAuth2(
           process.env.GOOGLE_CLIENT_ID || 'your-client-id',
@@ -34,23 +76,11 @@ export class GoogleSheetsService {
         );
 
         oauth2Client.setCredentials(tokens);
-
-        // Check if token needs refresh
-        if (tokens.expiry_date && tokens.expiry_date < Date.now()) {
-          console.log('Refreshing expired token...');
-          try {
-            const { credentials } = await oauth2Client.refreshAccessToken();
-            oauth2Client.setCredentials(credentials);
-            await fs.writeFile(tokenPath, JSON.stringify(credentials));
-          } catch (refreshError) {
-            console.error('Failed to refresh token:', refreshError);
-            // Continue with existing token and hope it works
-          }
-        }
-
         auth = oauth2Client;
       } else {
-        throw new Error('No OAuth2 tokens found. Please authenticate first.');
+        throw new Error(
+          'No Google OAuth2 credentials found. Please set GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET environment variables.',
+        );
       }
 
       this.sheets = google.sheets({ version: 'v4', auth });
@@ -111,9 +141,16 @@ export class GoogleSheetsService {
   }
 
   async getSheetData(spreadsheetId: string, range: string = 'A:Z'): Promise<SheetData> {
-    await this.initializeAuth();
-
     try {
+      // For production environments without local tokens, try public access first
+      if (!(await this.fileExists(path.join(process.cwd(), '.google-tokens.json')))) {
+        console.log('No local tokens found, trying public CSV export first...');
+        return await this.getPublicSheetData(spreadsheetId);
+      }
+
+      // Try authenticated methods if tokens are available
+      await this.initializeAuth();
+
       // First try the Sheets API
       const response = await this.sheets.spreadsheets.values.get({
         spreadsheetId,
@@ -150,8 +187,41 @@ export class GoogleSheetsService {
         };
       } catch (driveError) {
         console.error('Drive API export also failed:', driveError);
-        throw new Error('Failed to fetch spreadsheet data from both Sheets API and Drive API');
+
+        // Final fallback: Try public CSV export URL (requires public sharing)
+        return await this.getPublicSheetData(spreadsheetId);
       }
+    }
+  }
+
+  private async getPublicSheetData(spreadsheetId: string): Promise<SheetData> {
+    try {
+      console.log('Trying public CSV export...');
+      const publicCsvUrl = `https://docs.google.com/spreadsheets/d/${spreadsheetId}/export?format=csv`;
+
+      const response = await fetch(publicCsvUrl);
+      if (!response.ok) {
+        throw new Error(`Public CSV export failed: ${response.statusText}`);
+      }
+
+      const csvData = await response.text();
+      const lines = csvData.split('\n').filter((line: string) => line.trim());
+      const values = lines.map((line: string) => {
+        // Simple CSV parsing (doesn't handle quoted commas)
+        return line.split(',').map((cell: string) => cell.trim().replace(/^"|"$/g, ''));
+      });
+
+      console.log('✅ Successfully fetched data via public CSV export');
+      return {
+        values,
+        range: 'A:Z',
+        majorDimension: 'ROWS',
+      };
+    } catch (publicError) {
+      console.error('Public CSV export failed:', publicError);
+      throw new Error(
+        'Failed to fetch spreadsheet data. Please ensure the spreadsheet is publicly accessible or check your authentication.',
+      );
     }
   }
 
