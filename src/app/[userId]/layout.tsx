@@ -6,7 +6,7 @@ import HamburgerMenu from '@/components/navigation/HamburgerMenu';
 
 interface UserLayoutProps {
   children: React.ReactNode;
-  params: { userId: string };
+  params: Promise<{ userId: string }>;
 }
 
 export default async function UserLayout({ children, params }: UserLayoutProps) {
