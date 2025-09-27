@@ -19,6 +19,7 @@ export async function uploadImageToStorage(file: File, userId: string): Promise<
 
     // Validate file type
     if (!file.type.startsWith('image/')) {
+      console.error('not image type');
       return {
         success: false,
         message: `${file.name} is not an image file`,
@@ -28,12 +29,13 @@ export async function uploadImageToStorage(file: File, userId: string): Promise<
     // Generate unique filename
     const fileExt = file.name.split('.').pop();
     const fileName = `${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
-    const filePath = `${userId}/${fileName}`;
+    const filePath = `${userId}/scans/${fileName}`;
 
     // Upload file to Supabase storage
     const { data: uploadData, error: uploadError } = await supabase.storage.from('flowers').upload(filePath, file);
 
     if (uploadError) {
+      console.log(uploadError);
       return {
         success: false,
         message: `Upload failed: ${uploadError.message}`,
@@ -45,7 +47,7 @@ export async function uploadImageToStorage(file: File, userId: string): Promise<
 
     // Save file metadata to database
     const { data: dbData, error: dbError } = await supabase
-      .from('uploaded_images')
+      .from('flower_updates')
       .insert({
         user_id: userId,
         file_path: filePath,
@@ -91,7 +93,7 @@ export async function deleteImageFromStorage(imageId: string, filePath: string, 
 
     // Verify user owns the image
     const { data: imageData, error: checkError } = await supabase
-      .from('uploaded_images')
+      .from('flower_updates')
       .select('user_id')
       .eq('id', imageId)
       .single();
@@ -114,7 +116,7 @@ export async function deleteImageFromStorage(imageId: string, filePath: string, 
     }
 
     // Delete from database
-    const { error: dbError } = await supabase.from('uploaded_images').delete().eq('id', imageId);
+    const { error: dbError } = await supabase.from('flower_updates').delete().eq('id', imageId);
 
     if (dbError) {
       return {
@@ -137,12 +139,61 @@ export async function deleteImageFromStorage(imageId: string, filePath: string, 
   }
 }
 
+export async function uploadScanImageToStorage(file: File, userId: string): Promise<UploadResult> {
+  try {
+    const supabase = await createClient();
+
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+      console.error('not image type');
+      return {
+        success: false,
+        message: `${file.name} is not an image file`,
+      };
+    }
+
+    // Generate unique filename
+    const fileExt = file.name.split('.').pop();
+    const fileName = `${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
+    const filePath = `${userId}/scans/${fileName}`;
+
+    // Upload file to Supabase storage
+    const { data: uploadData, error: uploadError } = await supabase.storage.from('flowers').upload(filePath, file);
+
+    if (uploadError) {
+      console.log(uploadError);
+      return {
+        success: false,
+        message: `Upload failed: ${uploadError.message}`,
+      };
+    }
+
+    // Get public URL
+    const { data: urlData } = supabase.storage.from('flowers').getPublicUrl(filePath);
+
+    return {
+      success: true,
+      message: 'File uploaded successfully',
+      data: {
+        id: uploadData.path, // Use the file path as ID since we're not storing in DB yet
+        file_path: filePath,
+        public_url: urlData.publicUrl,
+      },
+    };
+  } catch (error) {
+    return {
+      success: false,
+      message: `Unexpected error: ${error instanceof Error ? error.message : 'Unknown error'}`,
+    };
+  }
+}
+
 export async function getUserImages(userId: string) {
   try {
     const supabase = await createClient();
 
     const { data, error } = await supabase
-      .from('uploaded_images')
+      .from('flower_updates')
       .select('*')
       .eq('user_id', userId)
       .order('uploaded_at', { ascending: false });

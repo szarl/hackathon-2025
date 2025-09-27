@@ -2,7 +2,10 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { useParams, usePathname } from 'next/navigation';
+import { usePathname } from 'next/navigation';
+import { appConst } from '@/models/const';
+import Image from 'next/image';
+import mainImage from '@/assets/PlantMain.svg';
 
 interface HamburgerMenuProps {
   userId: string;
@@ -23,7 +26,8 @@ export default function HamburgerMenu({ userId }: HamburgerMenuProps) {
   const menuItems = [
     { href: `/${userId}/dashboard`, label: 'Dashboard' },
     { href: `/${userId}/calendar`, label: 'Care Calendar' },
-    { href: `/${userId}/flowers`, label: 'Flowers' },
+    { href: `/${userId}/flowers`, label: 'Plants' },
+    { href: `/${userId}/scans`, label: 'Scans' },
     { href: `/${userId}/upload`, label: 'Upload' },
     { href: `/${userId}/smarthome`, label: 'Smarthome' },
     { href: `/${userId}/partnerships`, label: 'Partnerships' },
@@ -68,6 +72,10 @@ export default function HamburgerMenu({ userId }: HamburgerMenuProps) {
         }`}
       >
         <div className='p-6 pt-16'>
+          <div className='vertical-align-middle mb-6 flex items-center gap-2 align-top'>
+            <Image src={mainImage} alt='Plantastic Logo' width={32} height={32} />
+            <h2 className='text-xl font-medium text-gray-700'>{appConst.appName}</h2>{' '}
+          </div>
           <nav className='space-y-4'>
             {menuItems.map((item) => (
               <Link
@@ -75,14 +83,13 @@ export default function HamburgerMenu({ userId }: HamburgerMenuProps) {
                 href={item.href}
                 onClick={closeMenu}
                 className={`block rounded-lg px-4 py-3 text-gray-700 transition-colors hover:bg-gray-100 ${
-                  isActiveLink(item.href) ? 'border-l-4 border-blue-500 bg-blue-50 text-blue-700' : ''
+                  isActiveLink(item.href) ? 'border-l-4 border-green-500 bg-green-50 text-green-700' : ''
                 }`}
               >
                 {item.label}
               </Link>
             ))}
           </nav>
-
           <div className='mt-8 border-t border-gray-200 pt-6'>
             <Link
               href='/auth'

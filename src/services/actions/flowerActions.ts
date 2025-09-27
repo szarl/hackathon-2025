@@ -113,8 +113,26 @@ export async function uploadFlowerImage(file: File, userId: string): Promise<Flo
       };
     }
 
+    // Generate tasks for the new flower
+    try {
+      const { error: taskError } = await supabase.rpc('generate_flower_tasks', {
+        p_flower_id: dbData.id,
+        p_user_id: userId,
+        p_flower_name: flowerAnalysis.name,
+      });
+
+      if (taskError) {
+        console.error('Error generating tasks:', taskError);
+        // Don't fail the upload if task generation fails
+      }
+    } catch (error) {
+      console.error('Error generating tasks:', error);
+      // Don't fail the upload if task generation fails
+    }
+
     revalidatePath('/dashboard');
     revalidatePath('/upload');
+    revalidatePath('/calendar');
 
     return {
       success: true,
@@ -332,5 +350,233 @@ export async function getRandomFlower(userId: string): Promise<FlowerRecord | nu
   } catch (error) {
     console.error('Error loading random flower:', error);
     return null;
+  }
+}
+
+// Task-related interfaces and functions
+export interface TaskRecord {
+  id: string;
+  flower_id: string;
+  user_id: string;
+  task_type: 'watering' | 'fertilizing' | 'health_check' | 'rotate' | 'repot';
+  title: string;
+  description: string | null;
+  scheduled_date: string;
+  scheduled_time: string | null;
+  priority: 'low' | 'normal' | 'high' | 'urgent';
+  status: 'scheduled' | 'completed' | 'overdue' | 'cancelled';
+  completed_at: string | null;
+  created_at: string;
+  updated_at: string;
+  flower_name?: string;
+}
+
+export interface FlowerUpdateRecord {
+  id: string;
+  flower_id: string;
+  user_id: string;
+  scan_image_url: string | null;
+  ai_analysis: any;
+  status: 'pending' | 'completed' | 'failed';
+  confidence_score: number | null;
+  issue_type: string | null;
+  issue_description: string | null;
+  recommendations: any;
+  created_at: string;
+  updated_at: string;
+  flowers?: {
+    name: string;
+    image_url: string;
+  };
+}
+
+export interface TaskStats {
+  total_tasks: number;
+  completed_tasks: number;
+  overdue_tasks: number;
+  watering_tasks: number;
+  health_check_tasks: number;
+  fertilizing_tasks: number;
+}
+
+export async function getTasksForDateRange(userId: string, startDate: string, endDate: string): Promise<TaskRecord[]> {
+  try {
+    const supabase = await createClient();
+
+    const { data, error } = await supabase.rpc('get_tasks_for_date_range', {
+      p_user_id: userId,
+      p_start_date: startDate,
+      p_end_date: endDate,
+    });
+
+    if (error) {
+      console.error('Error fetching tasks:', error);
+      return [];
+    }
+
+    return data || [];
+  } catch (error) {
+    console.error('Error loading tasks:', error);
+    return [];
+  }
+}
+
+export async function getMonthlyTaskStats(userId: string, year: number, month: number): Promise<TaskStats | null> {
+  try {
+    const supabase = await createClient();
+
+    const { data, error } = await supabase.rpc('get_monthly_task_stats', {
+      p_user_id: userId,
+      p_year: year,
+      p_month: month,
+    });
+
+    if (error) {
+      console.error('Error fetching task stats:', error);
+      return null;
+    }
+
+    return data?.[0] || null;
+  } catch (error) {
+    console.error('Error loading task stats:', error);
+    return null;
+  }
+}
+
+export async function updateTaskStatus(
+  taskId: string,
+  userId: string,
+  status: 'completed' | 'cancelled',
+): Promise<FlowerUploadResult> {
+  try {
+    const supabase = await createClient();
+
+    // Verify user owns the task
+    const { data: taskData, error: checkError } = await supabase
+      .from('tasks')
+      .select('user_id')
+      .eq('id', taskId)
+      .single();
+
+    if (checkError || !taskData || taskData.user_id !== userId) {
+      return {
+        success: false,
+        message: 'Unauthorized or task not found',
+      };
+    }
+
+    // Update the task status
+    const updateData: any = { status };
+    if (status === 'completed') {
+      updateData.completed_at = new Date().toISOString();
+    }
+
+    const { error: updateError } = await supabase.from('tasks').update(updateData).eq('id', taskId);
+
+    if (updateError) {
+      return {
+        success: false,
+        message: `Update failed: ${updateError.message}`,
+      };
+    }
+
+    revalidatePath('/calendar');
+
+    return {
+      success: true,
+      message: `Task ${status} successfully`,
+    };
+  } catch (error) {
+    console.error('Error updating task:', error);
+    return {
+      success: false,
+      message: `Unexpected error: ${error instanceof Error ? error.message : 'Unknown error'}`,
+    };
+  }
+}
+
+export async function getUpcomingTasks(userId: string, limit: number = 5): Promise<TaskRecord[]> {
+  try {
+    const supabase = await createClient();
+
+    const { data, error } = await supabase
+      .from('tasks')
+      .select(
+        `
+        *,
+        flowers!inner(name)
+      `,
+      )
+      .eq('user_id', userId)
+      .eq('status', 'scheduled')
+      .gte('scheduled_date', new Date().toISOString().split('T')[0])
+      .order('scheduled_date', { ascending: true })
+      .order('scheduled_time', { ascending: true, nullsFirst: true })
+      .limit(limit);
+
+    if (error) {
+      console.error('Error fetching upcoming tasks:', error);
+      return [];
+    }
+
+    return (
+      data?.map((task) => ({
+        ...task,
+        flower_name: task.flowers?.name,
+      })) || []
+    );
+  } catch (error) {
+    console.error('Error loading upcoming tasks:', error);
+    return [];
+  }
+}
+
+export async function getFlowerUpdateById(scanId: string, userId: string): Promise<FlowerUpdateRecord | null> {
+  try {
+    const supabase = await createClient();
+
+    const { data, error } = await supabase
+      .from('flower_updates')
+      .select('*')
+      .eq('id', scanId)
+      .eq('user_id', userId)
+      .single();
+
+    if (error) {
+      console.error('Error fetching flower update:', error);
+      return null;
+    }
+
+    return data;
+  } catch (error) {
+    console.error('Error loading flower update:', error);
+    return null;
+  }
+}
+
+export async function getAllFlowerUpdates(userId: string): Promise<FlowerUpdateRecord[]> {
+  try {
+    const supabase = await createClient();
+
+    const { data, error } = await supabase
+      .from('flower_updates')
+      .select(
+        `
+        *,
+        flowers!inner(name, image_url)
+      `,
+      )
+      .eq('user_id', userId)
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      console.error('Error fetching flower updates:', error);
+      return [];
+    }
+
+    return data || [];
+  } catch (error) {
+    console.error('Error loading flower updates:', error);
+    return [];
   }
 }

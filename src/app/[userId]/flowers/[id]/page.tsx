@@ -1,4 +1,4 @@
-import { getFlowerById } from '@/services/actions/flowerActions';
+import { getFlowerById, getTasksForDateRange, type TaskRecord } from '@/services/actions/flowerActions';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 
@@ -33,6 +33,23 @@ export default async function FlowerPage({ params }: FlowerDetailPageProps) {
     notFound();
   }
 
+  // Get upcoming tasks for this flower
+  const now = new Date();
+  const nextMonth = new Date(now.getFullYear(), now.getMonth() + 1, 1);
+  const tasks = await getTasksForDateRange(
+    userId,
+    now.toISOString().split('T')[0],
+    nextMonth.toISOString().split('T')[0],
+  );
+
+  // Filter tasks for this specific flower
+  const flowerTasks = tasks.filter((task) => task.flower_id === id);
+
+  // Get the next task of each type
+  const nextWatering = flowerTasks.find((task) => task.task_type === 'watering' && task.status === 'scheduled');
+  const nextFertilizing = flowerTasks.find((task) => task.task_type === 'fertilizing' && task.status === 'scheduled');
+  const nextRotate = flowerTasks.find((task) => task.task_type === 'rotate' && task.status === 'scheduled');
+
   const formatDateShort = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('en-US', {
       year: 'numeric',
@@ -41,8 +58,18 @@ export default async function FlowerPage({ params }: FlowerDetailPageProps) {
     });
   };
 
-  // For demonstration - in a real app, this would come from a watering log
-  const lastWatering = new Date(Date.now() - Math.random() * 7 * 24 * 60 * 60 * 1000);
+  const formatDateRelative = (dateString: string) => {
+    const today = new Date();
+    const taskDate = new Date(dateString);
+    const diffTime = taskDate.getTime() - today.getTime();
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+    if (diffDays === 0) return 'Today';
+    if (diffDays === 1) return 'Tomorrow';
+    if (diffDays > 1) return `In ${diffDays} days`;
+    if (diffDays < 0) return `${Math.abs(diffDays)} days ago`;
+    return formatDateShort(dateString);
+  };
 
   return (
     <div className='relative box-border flex size-full flex-col content-stretch items-center gap-[56px] bg-[#f7f9f8] px-[24px] pt-[56px] pb-[24px]'>
@@ -71,11 +98,11 @@ export default async function FlowerPage({ params }: FlowerDetailPageProps) {
 
               <div className="relative flex w-full shrink-0 content-stretch items-start justify-between font-['Inter:Medium',_sans-serif] text-[14px] leading-[0] font-medium tracking-[-0.1504px] text-nowrap not-italic">
                 <div className='relative shrink-0 text-[#111111]'>
-                  <p className='leading-[20px] text-nowrap whitespace-pre'>Last watering</p>
+                  <p className='leading-[20px] text-nowrap whitespace-pre'>Next watering</p>
                 </div>
                 <div className='relative shrink-0 text-[#9aa3a7]'>
                   <p className='leading-[20px] text-nowrap whitespace-pre'>
-                    {formatDateShort(lastWatering.toISOString())}
+                    {nextWatering ? formatDateRelative(nextWatering.scheduled_date) : 'No tasks scheduled'}
                   </p>
                 </div>
               </div>
@@ -127,7 +154,7 @@ export default async function FlowerPage({ params }: FlowerDetailPageProps) {
                   </div>
                   <div className='relative shrink-0 text-[#9aa3a7]'>
                     <p className='leading-[20px] text-nowrap whitespace-pre'>
-                      {formatDateShort(lastWatering.toISOString())}
+                      {nextWatering ? formatDateRelative(nextWatering.scheduled_date) : 'No tasks scheduled'}
                     </p>
                   </div>
                 </div>
@@ -139,7 +166,9 @@ export default async function FlowerPage({ params }: FlowerDetailPageProps) {
                     <p className='leading-[20px] text-nowrap whitespace-pre'>Fertilizing</p>
                   </div>
                   <div className='relative shrink-0 text-[#9aa3a7]'>
-                    <p className='leading-[20px] text-nowrap whitespace-pre'>{formatDateShort(flower.updated_at)}</p>
+                    <p className='leading-[20px] text-nowrap whitespace-pre'>
+                      {nextFertilizing ? formatDateRelative(nextFertilizing.scheduled_date) : 'No tasks scheduled'}
+                    </p>
                   </div>
                 </div>
               </div>
@@ -150,7 +179,9 @@ export default async function FlowerPage({ params }: FlowerDetailPageProps) {
                     <p className='leading-[20px] text-nowrap whitespace-pre'>Rotate</p>
                   </div>
                   <div className='relative shrink-0 text-[#9aa3a7]'>
-                    <p className='leading-[20px] text-nowrap whitespace-pre'>{formatDateShort(flower.updated_at)}</p>
+                    <p className='leading-[20px] text-nowrap whitespace-pre'>
+                      {nextRotate ? formatDateRelative(nextRotate.scheduled_date) : 'No tasks scheduled'}
+                    </p>
                   </div>
                 </div>
               </div>
@@ -178,7 +209,10 @@ export default async function FlowerPage({ params }: FlowerDetailPageProps) {
 
             {/* Action Buttons */}
             <div className='relative flex h-[112px] w-full shrink-0 flex-col content-stretch items-start gap-[16px]'>
-              <div className='relative box-border flex w-full shrink-0 content-stretch items-center justify-center gap-[12px] rounded-[6px] bg-[#2a7f62] px-[108px] py-[14px]'>
+              <Link
+                href={`/${userId}/flowers/${id}/scan`}
+                className='relative box-border flex w-full shrink-0 content-stretch items-center justify-center gap-[12px] rounded-[6px] bg-[#2a7f62] px-[108px] py-[14px] transition-colors hover:bg-[#1f5f4a]'
+              >
                 <div className='relative size-[16px] shrink-0'>
                   <svg className='size-full' viewBox='0 0 24 24' fill='none'>
                     <path d='M12 2L13.09 8.26L20 9L13.09 9.74L12 16L10.91 9.74L4 9L10.91 8.26L12 2Z' fill='white' />
@@ -187,9 +221,12 @@ export default async function FlowerPage({ params }: FlowerDetailPageProps) {
                 <div className="relative shrink-0 font-['Inter:Medium',_sans-serif] text-[14px] leading-[0] font-medium tracking-[-0.1504px] text-nowrap text-white not-italic">
                   <p className='leading-[20px] whitespace-pre'>Scan now</p>
                 </div>
-              </div>
+              </Link>
 
-              <div className='relative box-border flex w-full shrink-0 content-stretch items-center justify-center gap-[12px] rounded-[6px] bg-[#f7f9f8] px-[135px] py-[14px]'>
+              <Link
+                href={`/${userId}/flowers/${id}/chat`}
+                className='relative box-border flex w-full shrink-0 content-stretch items-center justify-center gap-[12px] rounded-[6px] bg-[#f7f9f8] px-[135px] py-[14px] transition-colors hover:bg-gray-100'
+              >
                 <div
                   aria-hidden='true'
                   className='pointer-events-none absolute inset-0 rounded-[6px] border border-solid border-[rgba(17,17,17,0.1)]'
@@ -200,7 +237,7 @@ export default async function FlowerPage({ params }: FlowerDetailPageProps) {
                 <div className="relative shrink-0 font-['Inter:Medium',_sans-serif] text-[14px] leading-[0] font-medium tracking-[-0.1504px] text-nowrap text-[#111111] not-italic">
                   <p className='leading-[20px] whitespace-pre'>Chat with Plantastic</p>
                 </div>
-              </div>
+              </Link>
             </div>
           </div>
         </div>
