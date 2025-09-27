@@ -27,8 +27,21 @@ export async function updateSession(request: NextRequest) {
 
   const {
     data: { user },
+    error,
   } = await supabase.auth.getUser();
 
-  supabaseResponse.cookies.set('supabase.auth.token', JSON.stringify(user));
+  // Only set the auth token cookie if we have a valid user
+  if (user && !error) {
+    supabaseResponse.cookies.set('supabase.auth.token', JSON.stringify(user), {
+      httpOnly: false, // Allow client-side access for checking auth state
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      maxAge: 60 * 60 * 24 * 7, // 7 days
+    });
+  } else {
+    // Clear the auth token cookie if user is not authenticated
+    supabaseResponse.cookies.delete('supabase.auth.token');
+  }
+
   return supabaseResponse;
 }

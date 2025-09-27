@@ -95,7 +95,7 @@ export default function DatabasePage() {
 
   if (loading) {
     return (
-      <div className='flex min-h-screen items-center justify-center bg-gray-50'>
+      <div className='flex min-h-screen items-center justify-center'>
         <div className='text-center'>
           <div className='mx-auto h-8 w-8 animate-spin rounded-full border-b-2 border-blue-600'></div>
           <p className='mt-4 text-gray-600'>Loading spreadsheet data...</p>
@@ -106,7 +106,7 @@ export default function DatabasePage() {
 
   if (error) {
     return (
-      <div className='flex min-h-screen items-center justify-center bg-gray-50'>
+      <div className='flex min-h-screen items-center justify-center'>
         <div className='text-center'>
           <div className='max-w-md rounded border border-red-400 bg-red-100 px-4 py-3 text-red-700'>
             <h3 className='mb-2 font-bold'>Error</h3>
@@ -124,7 +124,7 @@ export default function DatabasePage() {
   }
 
   return (
-    <div className='min-h-screen bg-gray-50 py-8'>
+    <div className='min-h-screen py-8'>
       <div className='mx-auto max-w-4xl px-4 sm:px-6 lg:px-8'>
         <div className='rounded-lg bg-white shadow'>
           <div className='px-4 py-5 sm:p-6'>

@@ -12,8 +12,8 @@ export interface User {
 }
 
 export interface Session {
-  user: User;
-  expires_at: number;
+  user: User | null;
+  expires_at: number | null;
 }
 
 export async function createClient() {
@@ -39,13 +39,8 @@ export async function auth(): Promise<Session> {
   const supabase = await createClient();
   const { data } = await supabase.auth.getUser();
   const { data: sessionData } = await supabase.auth.getSession();
-
-  if (!data.user || !sessionData.session) {
-    return redirect('/auth');
-  }
-
   return {
-    user: data.user,
-    expires_at: sessionData.session.expires_at!,
+    user: data?.user || null,
+    expires_at: sessionData?.session?.expires_at || null,
   };
 }

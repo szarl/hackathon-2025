@@ -7,9 +7,10 @@ import RegisterForm from './RegisterForm';
 interface AuthTabsProps {
   initialTab?: 'signin' | 'register';
   children?: React.ReactNode;
+  redirectTo?: string;
 }
 
-export default function AuthTabs({ children }: AuthTabsProps) {
+export default function AuthTabs({ children, redirectTo }: AuthTabsProps) {
   const [activeTab, setActiveTab] = useState('signin');
 
   return (
@@ -19,7 +20,7 @@ export default function AuthTabs({ children }: AuthTabsProps) {
           onClick={() => setActiveTab('signin')}
           className={`w-1/2 py-2 text-center ${
             activeTab === 'signin'
-              ? 'border-b-2 border-blue-500 font-medium text-blue-600'
+              ? 'border-b-2 border-[#2a7f62] font-medium text-[#2a7f62]'
               : 'text-gray-500 hover:text-gray-700'
           }`}
         >
@@ -29,7 +30,7 @@ export default function AuthTabs({ children }: AuthTabsProps) {
           onClick={() => setActiveTab('register')}
           className={`w-1/2 py-2 text-center ${
             activeTab === 'register'
-              ? 'border-b-2 border-blue-500 font-medium text-blue-600'
+              ? 'border-b-2 border-[#2a7f62] font-medium text-[#2a7f62]'
               : 'text-gray-500 hover:text-gray-700'
           }`}
         >
@@ -46,7 +47,7 @@ export default function AuthTabs({ children }: AuthTabsProps) {
             zIndex: activeTab === 'signin' ? 1 : 0,
           }}
         >
-          <SignInForm />
+          <SignInForm redirectTo={redirectTo} />
           {children}
         </div>
         <div
@@ -57,7 +58,7 @@ export default function AuthTabs({ children }: AuthTabsProps) {
             zIndex: activeTab === 'register' ? 1 : 0,
           }}
         >
-          <RegisterForm />
+          <RegisterForm redirectTo={redirectTo} />
           {children}
         </div>
       </div>

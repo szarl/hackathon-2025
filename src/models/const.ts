@@ -1,4 +1,4 @@
 export const appConst = {
-  appName: 'Kwiatkowo',
+  appName: 'Plantastic',
   appDescription: 'A place to grow your plants',
 };

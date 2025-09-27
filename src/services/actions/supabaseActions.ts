@@ -9,13 +9,14 @@ export async function login(formData: FormData) {
     email: formData.get('email') as string,
     password: formData.get('password') as string,
   };
+  const redirectTo = formData.get('redirectTo') as string;
 
-  const { error } = await supabase.auth.signInWithPassword(data);
+  const { error, data: userData } = await supabase.auth.signInWithPassword(data);
   if (error) {
     redirect('/error');
   }
   revalidatePath('/', 'layout');
-  redirect('/');
+  redirect(redirectTo || `/${userData.user.id}/dashboard`);
 }
 
 export async function register(formData: FormData): Promise<void> {
@@ -24,13 +25,17 @@ export async function register(formData: FormData): Promise<void> {
     email: formData.get('email') as string,
     password: formData.get('password') as string,
   };
-
+  const redirectTo = formData.get('redirectTo') as string;
   const { error } = await supabase.auth.signUp(data);
   if (error) {
     redirect('/error');
   }
   revalidatePath('/', 'layout');
-  redirect('/auth/verification');
+  if (redirectTo) {
+    redirect(`/registration?redirectTo=${encodeURIComponent(redirectTo)}`);
+  } else {
+    redirect('/registration');
+  }
 }
 
 export async function logout(): Promise<void> {
@@ -41,4 +46,10 @@ export async function logout(): Promise<void> {
   }
   revalidatePath('/', 'layout');
   redirect('/');
+}
+
+export async function getCurrentUserId(): Promise<string | null> {
+  const supabase = await createClient();
+  const { data } = await supabase.auth.getUser();
+  return data?.user?.id || null;
 }
