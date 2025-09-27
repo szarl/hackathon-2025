@@ -11,6 +11,8 @@
     "@google/generative-ai": "^0.24.1",
     "@microsoft/tiktokenizer": "^1.0.10",
     "@qdrant/js-client-rest": "^1.15.1",
+    "@supabase/ssr": "^0.7.0",
+    "@supabase/supabase-js": "^2.58.0",
     "googleapis": "^159.0.0",
     "langfuse": "^3.38.5",
     "langfuse-core": "^3.38.5",
