@@ -1,6 +1,5 @@
 import { GoogleGenerativeAI, GenerativeModel, ChatSession } from '@google/generative-ai';
 import type { ChatCompletionMessageParam } from 'openai/resources/chat/completions';
-import type { ParsingError } from './AssistantService';
 
 export interface GeminiMessage {
   role: 'user' | 'model';
@@ -129,20 +128,6 @@ export class GeminiService {
     }
 
     return geminiMessages;
-  }
-
-  parseJsonResponse<IResponseFormat>(response: any): IResponseFormat | ParsingError {
-    try {
-      const content = response.choices?.[0]?.message?.content;
-      if (!content) {
-        throw new Error('Invalid response structure');
-      }
-      const parsedContent = JSON.parse(content);
-      return parsedContent;
-    } catch (error) {
-      console.error('Error parsing JSON response:', error);
-      return { error: 'Failed to process response', result: false };
-    }
   }
 
   async createEmbedding(text: string): Promise<number[]> {

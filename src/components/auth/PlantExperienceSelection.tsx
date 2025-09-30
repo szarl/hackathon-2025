@@ -7,20 +7,11 @@ import MainPlant from '@/assets/PlantMain.svg';
 import PlantIcon from '@/assets/plant.svg';
 import CactusIcon from '@/assets/Cactus.svg';
 
-interface PlantExperienceSelectionProps {
-  redirectTo?: string;
-  userId: string;
-}
-
-export default function PlantExperienceSelection({ redirectTo, userId }: PlantExperienceSelectionProps) {
+export default function PlantExperienceSelection() {
   const [selectedOption, setSelectedOption] = useState<boolean | null>(null);
 
   const handleOptionClick = (hasPlants: boolean) => {
     setSelectedOption(hasPlants);
-  };
-
-  const getRedirectUrl = () => {
-    return redirectTo || `/${userId}/dashboard`;
   };
 
   return (
@@ -126,26 +117,16 @@ export default function PlantExperienceSelection({ redirectTo, userId }: PlantEx
           </div>
         </div>
       </div>
-      {selectedOption !== null ? (
-        <Link
-          href={getRedirectUrl()}
-          className='relative h-[48px] w-[336px] shrink-0 cursor-pointer rounded-[6px] bg-[#2a7f62] transition-colors hover:bg-[#2a7f62]/90'
-        >
-          <div className='relative box-border h-[48px] w-[336px] border-0 border-solid border-[transparent] bg-clip-padding'>
-            <div className='absolute top-[14.5px] left-[138.22px] text-[14px] leading-[0] font-medium tracking-[-0.1504px] text-nowrap text-white not-italic'>
-              <p className='leading-[20px] whitespace-pre'>Continue</p>
-            </div>
-          </div>
-        </Link>
-      ) : (
-        <div className='relative h-[48px] w-[336px] shrink-0 cursor-not-allowed rounded-[6px] bg-gray-300 transition-colors'>
-          <div className='relative box-border h-[48px] w-[336px] border-0 border-solid border-[transparent] bg-clip-padding'>
-            <div className='absolute top-[14.5px] left-[138.22px] text-[14px] leading-[0] font-medium tracking-[-0.1504px] text-nowrap text-white not-italic'>
-              <p className='leading-[20px] whitespace-pre'>Continue</p>
-            </div>
+      <Link
+        href='/registration/secondStep'
+        className='relative h-[48px] w-[336px] shrink-0 cursor-pointer rounded-[6px] bg-[#2a7f62] transition-colors hover:bg-[#2a7f62]/90'
+      >
+        <div className='relative box-border h-[48px] w-[336px] border-0 border-solid border-[transparent] bg-clip-padding'>
+          <div className='absolute top-[14.5px] left-[138.22px] text-[14px] leading-[0] font-medium tracking-[-0.1504px] text-nowrap text-white not-italic'>
+            <p className='leading-[20px] whitespace-pre'>Continue</p>
           </div>
         </div>
-      )}
+      </Link>
     </div>
   );
 }
