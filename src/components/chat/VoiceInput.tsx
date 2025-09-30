@@ -42,13 +42,13 @@ export default function VoiceInput({ onTranscription, disabled = false }: VoiceI
         setIsRecording(true);
       };
 
-      recognition.onresult = (event) => {
+      recognition.onresult = (event: any) => {
         const transcript = event.results[0][0].transcript;
         onTranscription(transcript);
         setIsRecording(false);
       };
 
-      recognition.onerror = (event) => {
+      recognition.onerror = (event: any) => {
         console.error('Speech recognition error:', event.error);
         setError(`Speech recognition error: ${event.error}`);
         setIsRecording(false);

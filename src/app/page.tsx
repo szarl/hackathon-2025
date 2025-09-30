@@ -1,18 +1,13 @@
 import { appConst } from '@/models/const';
 import Image from 'next/image';
 import Link from 'next/link';
-
-const imgLogo = 'http://localhost:3845/assets/699346aa024a7b57844a33a2be81ba60b1b922d6.svg';
+import mainImage from '@/assets/PlantMain.svg';
 
 export default function Home() {
   return (
     <div className='relative box-border flex size-full min-h-screen flex-col content-stretch items-center justify-center gap-[32px] bg-[#f7f9f8] p-[24px]'>
-      <div className='relative size-[128px] shrink-0 rounded-[16px] bg-[rgba(42,127,98,0.1)]'>
-        <div className='relative box-border flex size-[128px] content-stretch items-center justify-center border-0 border-solid border-[transparent] bg-clip-padding'>
-          <div className='relative size-[64px] shrink-0'>
-            <img alt='Plantastic Logo' className='block size-full max-w-none' src={imgLogo} />
-          </div>
-        </div>
+      <div className='relative size-[128px] shrink-0'>
+        <Image alt='Plantastic Logo' className='block size-full max-w-none' src={mainImage} />
       </div>
 
       <div className='relative h-[96px] w-full shrink-0'>
@@ -29,7 +24,7 @@ export default function Home() {
       <div className='relative w-full max-w-[420px] shrink-0'>
         <div className='relative box-border flex w-full flex-col content-stretch items-start gap-[16px] border-0 border-solid border-[transparent] bg-clip-padding'>
           <Link
-            href='/auth'
+            href='/auth?registration=false'
             className='relative flex h-[48px] w-full shrink-0 items-center justify-center rounded-[6px] bg-[#2a7f62]'
           >
             <div className="font-['Inter:Medium',_sans-serif] text-[14px] leading-[0] font-medium tracking-[-0.1504px] text-nowrap text-white not-italic">
@@ -37,7 +32,7 @@ export default function Home() {
             </div>
           </Link>
           <Link
-            href='/auth'
+            href='/auth?registration=true'
             className='relative flex h-[48px] w-full shrink-0 items-center justify-center rounded-[6px] bg-[#f7f9f8]'
           >
             <div

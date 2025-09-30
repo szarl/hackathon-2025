@@ -81,7 +81,7 @@ Please analyze this image:`;
             responseMimeType: 'application/json',
           },
         },
-        { customHeaders: { 'X-Client-Info': 'flower-recognition-service' } },
+        { customHeaders: { 'X-Client-Info': 'flower-recognition-service',  } },
       );
 
       const response = await result.response;

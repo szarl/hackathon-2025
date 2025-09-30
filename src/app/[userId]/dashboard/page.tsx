@@ -18,7 +18,6 @@ interface DashboardStats {
 export default function DashboardPage({ params }: { params: { userId: string } }) {
   const [user, setUser] = useState<any>(null);
   const [flowers, setFlowers] = useState<FlowerRecord[]>([]);
-  const [randomFlower, setRandomFlower] = useState<FlowerRecord | null>(null);
   const [stats, setStats] = useState<DashboardStats>({
     totalPlants: 0,
     healthyPlants: 0,
@@ -47,10 +46,6 @@ export default function DashboardPage({ params }: { params: { userId: string } }
         // Fetch limited flowers for "Your plants" section
         const limitedFlowers = await getUserFlowersLimited(user.id, 2);
         setFlowers(limitedFlowers);
-
-        // Fetch random flower for tasks
-        const random = await getRandomFlower(user.id);
-        setRandomFlower(random);
 
         // Calculate stats (mock data for now)
         const allFlowers = await getUserFlowersLimited(user.id, 100); // Get more for stats
@@ -202,64 +197,15 @@ export default function DashboardPage({ params }: { params: { userId: string } }
               </div>
             </div>
           </div>
-          {randomFlower ? (
-            <div className='relative box-border flex h-[82px] w-full shrink-0 flex-col content-stretch items-start rounded-[12px] bg-white p-[17px]'>
-              <div
-                aria-hidden='true'
-                className='pointer-events-none absolute inset-0 rounded-[12px] border border-solid border-[rgba(17,17,17,0.1)]'
-              />
-              <div className='relative min-h-px w-full min-w-px shrink-0 grow basis-0'>
-                <div className='relative box-border flex size-full content-stretch items-center gap-[12px] border-0 border-solid border-[transparent] bg-clip-padding'>
-                  <div className='relative size-[48px] shrink-0 rounded-[8px] bg-[#f7f9f8]'>
-                    <div className='relative box-border flex size-[48px] flex-col content-stretch items-start overflow-clip border-0 border-solid border-[transparent] bg-clip-padding'>
-                      <div className='relative h-[48px] w-full shrink-0'>
-                        <img
-                          alt={randomFlower.name}
-                          className='object-50%-50% pointer-events-none absolute inset-0 size-full max-w-none rounded-[8px] object-cover'
-                          src={randomFlower.image_url}
-                        />
-                      </div>
-                    </div>
-                  </div>
-                  <div className='relative min-h-px min-w-px shrink-0 grow basis-0'>
-                    <div className='relative box-border flex w-full content-stretch items-center justify-between border-0 border-solid border-[transparent] bg-clip-padding'>
-                      <div className='relative h-[44px] w-[107.734px] shrink-0'>
-                        <div className='relative box-border flex h-[44px] w-[107.734px] flex-col content-stretch items-start border-0 border-solid border-[transparent] bg-clip-padding'>
-                          <div className='relative h-[24px] w-full shrink-0'>
-                            <div className='absolute top-[-0.5px] left-0 font-["Inter:Medium",_sans-serif] text-[16px] leading-[0] font-medium tracking-[-0.3125px] text-nowrap text-[#111111] not-italic'>
-                              <p className='leading-[24px] whitespace-pre'>{randomFlower.name}</p>
-                            </div>
-                          </div>
-                          <div className='relative h-[20px] w-full shrink-0'>
-                            <div className='absolute top-[0.5px] left-0 font-["Inter:Regular",_sans-serif] text-[14px] leading-[0] font-normal tracking-[-0.1504px] text-nowrap text-[#9aa3a7] not-italic'>
-                              <p className='leading-[20px] whitespace-pre'>Water • Today</p>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                      <div className='relative h-[32px] w-[58.586px] shrink-0 rounded-[6px] bg-[#2a7f62]'>
-                        <div className='relative box-border flex h-[32px] w-[58.586px] content-stretch items-center justify-center gap-[6px] border-0 border-solid border-[transparent] bg-clip-padding px-[12px] py-0'>
-                          <div className='relative shrink-0 font-["Inter:Medium",_sans-serif] text-[14px] leading-[0] font-medium tracking-[-0.1504px] text-nowrap text-white not-italic'>
-                            <p className='leading-[20px] whitespace-pre'>Done</p>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
+          <div className='relative box-border flex h-[82px] w-full shrink-0 flex-col content-stretch items-center justify-center rounded-[12px] bg-white p-[17px]'>
+            <div
+              aria-hidden='true'
+              className='pointer-events-none absolute inset-0 rounded-[12px] border border-solid border-[rgba(17,17,17,0.1)]'
+            />
+            <div className='relative shrink-0 text-center font-["Inter:Regular",_sans-serif] text-[14px] leading-[0] font-normal tracking-[-0.1504px] text-nowrap text-[#9aa3a7] not-italic'>
+              <p className='leading-[20px] whitespace-pre'>No tasks yet. Add your first plant!</p>
             </div>
-          ) : (
-            <div className='relative box-border flex h-[82px] w-full shrink-0 flex-col content-stretch items-center justify-center rounded-[12px] bg-white p-[17px]'>
-              <div
-                aria-hidden='true'
-                className='pointer-events-none absolute inset-0 rounded-[12px] border border-solid border-[rgba(17,17,17,0.1)]'
-              />
-              <div className='relative shrink-0 text-center font-["Inter:Regular",_sans-serif] text-[14px] leading-[0] font-normal tracking-[-0.1504px] text-nowrap text-[#9aa3a7] not-italic'>
-                <p className='leading-[20px] whitespace-pre'>No tasks yet. Add your first plant!</p>
-              </div>
-            </div>
-          )}
+          </div>
         </div>
       </div>
 

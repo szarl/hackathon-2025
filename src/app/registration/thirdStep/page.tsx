@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, Suspense } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
@@ -66,7 +66,7 @@ function PlantCard({ recommendation, index }: PlantCardProps) {
   );
 }
 
-export default function ThirdStep() {
+function ThirdStepInner() {
   const searchParams = useSearchParams();
   const [recommendations, setRecommendations] = useState<PlantRecommendation[]>([]);
   const [loading, setLoading] = useState(true);
@@ -170,5 +170,13 @@ export default function ThirdStep() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function ThirdStep() {
+  return (
+    <Suspense fallback={null}>
+      <ThirdStepInner />
+    </Suspense>
   );
 }

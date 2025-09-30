@@ -10,11 +10,6 @@ interface RegistrationPageProps {
 
 export default async function RegistrationPage({ searchParams }: RegistrationPageProps) {
   const userId = await getCurrentUserId();
-
-  if (!userId) {
-    redirect('/auth');
-  }
-
   const redirectTo = '/registration/secondStep';
 
   return <PlantExperienceSelection redirectTo={redirectTo} userId={userId} />;

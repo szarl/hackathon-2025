@@ -21,7 +21,7 @@ export default function VerificationPage() {
           your registration.
         </p>
         <div className='mt-6'>
-          <Link href='/auth' className='text-blue-600 hover:text-blue-800'>
+          <Link href='/auth' className='text-green-600 hover:text-green-800'>
             Return to login
           </Link>
         </div>

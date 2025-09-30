@@ -10,8 +10,8 @@ interface AuthTabsProps {
   redirectTo?: string;
 }
 
-export default function AuthTabs({ children, redirectTo }: AuthTabsProps) {
-  const [activeTab, setActiveTab] = useState('signin');
+export default function AuthTabs({ children, redirectTo, initialTab }: AuthTabsProps) {
+  const [activeTab, setActiveTab] = useState(initialTab || 'signin');
 
   return (
     <>

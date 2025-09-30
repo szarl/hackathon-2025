@@ -6,6 +6,7 @@ import { usePathname } from 'next/navigation';
 import { appConst } from '@/models/const';
 import Image from 'next/image';
 import mainImage from '@/assets/PlantMain.svg';
+import { logout } from '@/services/actions/supabaseActions';
 
 interface HamburgerMenuProps {
   userId: string;
@@ -21,6 +22,10 @@ export default function HamburgerMenu({ userId }: HamburgerMenuProps) {
 
   const closeMenu = () => {
     setIsOpen(false);
+  };
+
+  const signOut = () => {
+    logout();
   };
 
   const menuItems = [
@@ -91,13 +96,12 @@ export default function HamburgerMenu({ userId }: HamburgerMenuProps) {
             ))}
           </nav>
           <div className='mt-8 border-t border-gray-200 pt-6'>
-            <Link
-              href='/auth'
-              onClick={closeMenu}
-              className='block rounded-lg px-4 py-3 text-red-600 transition-colors hover:bg-red-50'
+            <button
+              onClick={signOut}
+              className='block w-full rounded-lg px-4 py-3 text-red-600 transition-colors hover:bg-red-50'
             >
               Sign Out
-            </Link>
+            </button>
           </div>
         </div>
       </div>

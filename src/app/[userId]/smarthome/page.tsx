@@ -138,6 +138,7 @@ export default function SmartHomePage() {
     <div className='flex h-full flex-col gap-6 p-6'>
       {/* Main Moisture Card */}
       <div className='relative h-[306px] rounded-xl border border-[rgba(17,17,17,0.1)] bg-white p-6'>
+        <h3 className='text-[#111111]'>Humidity</h3>
         <div className='flex h-full flex-col items-center justify-center'>
           <CircularProgress percentage={45} />
           <div className='mt-8'>
@@ -146,7 +147,7 @@ export default function SmartHomePage() {
             </div>
           </div>
         </div>
-        <div className='absolute bottom-6 left-1/2 -translate-x-1/2 transform'>
+        <div className='absolute bottom-2 left-1/2 -translate-x-1/2 transform'>
           <span className='text-sm text-[#9AA3A7]'>Last updated 2 min ago</span>
         </div>
       </div>
